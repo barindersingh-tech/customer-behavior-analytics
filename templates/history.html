@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<h1>Lookup history</h1>
+<p class="sub">The last customers you analysed.</p>
+<div class="card">
+  {% if rows %}
+  <table><tr><th>Time</th><th>Customer</th><th>Segment</th><th>Risk level</th><th>Risk score</th></tr>
+    {% for r in rows %}<tr><td>{{ r.time }}</td><td><a href="{{ url_for('customer', cid=r.customer_id) }}">{{ r.customer_id }}</a></td><td>{{ r.segment }}</td><td><span class="pill {{ r.risk_level }}">{{ r.risk_level }}</span></td><td>{{ r.risk_score }}</td></tr>{% endfor %}
+  </table>
+  {% else %}<p>No lookups yet. Search for a customer ID on the dashboard.</p>{% endif %}
+</div>
+{% endblock %}

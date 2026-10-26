@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}What-if prediction{% endblock %}
+{% block content %}
+<h1>What-if prediction</h1>
+<p class="sub">Describe a customer and see the predicted churn risk, without needing an ID.</p>
+<div class="card">
+  <form method="post">
+    <div class="formgrid">
+      <div><label>Days since last order</label><input type="number" step="any" name="recency" value="{{ form.recency }}" required></div>
+      <div><label>Total number of orders</label><input type="number" step="any" name="frequency" value="{{ form.frequency }}" required></div>
+      <div><label>Total spend</label><input type="number" step="any" name="monetary" value="{{ form.monetary }}" required></div>
+      <div><label>Days since first order</label><input type="number" step="any" name="tenure_days" value="{{ form.tenure_days }}" required></div>
+      <div><label>Orders in last 90 days</label><input type="number" step="any" name="orders_last_90d" value="{{ form.orders_last_90d }}" required></div>
+      <div><label>Distinct products bought</label><input type="number" step="any" name="n_products" value="{{ form.n_products }}" required></div>
+      <div><label>Returned / cancelled lines</label><input type="number" step="any" name="return_lines" value="{{ form.return_lines }}" required></div>
+    </div>
+    <p><button type="submit">Predict</button></p>
+  </form>
+</div>
+{% if result %}
+<div class="grid g4" style="margin-top:16px">
+  <div class="card kpi"><div class="l">Churn probability</div><div class="v">{{ (result.probability*100)|round(1) }}%</div></div>
+  <div class="card kpi"><div class="l">Risk score</div><div class="v">{{ result.risk_score }}/100</div></div>
+  <div class="card kpi"><div class="l">Risk level</div><div class="v"><span class="pill {{ result.risk_level }}">{{ result.risk_level }}</span></div></div>
+  <div class="card kpi"><div class="l">Priority</div><div class="v" style="font-size:1.2rem">{{ result.priority }}</div></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Why?</h2><ul class="clean">{% for r in result.reasons %}<li>{{ r }}</li>{% endfor %}</ul></div>
+{% endif %}
+{% endblock %}

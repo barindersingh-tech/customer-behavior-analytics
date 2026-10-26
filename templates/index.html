@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+<p class="sub">Data: <b>{{ m.data_source }}</b> ({{ m.data_file }}). Churn means no purchase in the next {{ m.churn_window_days }} days.
+{% if m.data_source == 'synthetic' %}<br><b>Note:</b> this is artificial demo data, so these numbers are not real-world findings. See README to use the real dataset.{% endif %}</p>
+
+<div class="grid g4">
+  <div class="card kpi"><div class="v">{{ kpis.customers|money }}</div><div class="l">Customers analysed</div></div>
+  <div class="card kpi"><div class="v">{{ kpis.revenue|money }}</div><div class="l">Total revenue</div></div>
+  <div class="card kpi"><div class="v">{{ (kpis.avg_churn*100)|round(1) }}%</div><div class="l">Average churn probability</div></div>
+  <div class="card kpi"><div class="v">{{ kpis.high_risk|money }}</div><div class="l">High-risk customers</div></div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Look up a customer</h2>
+  <form class="inline" action="{{ url_for('lookup') }}" method="get">
+    <input type="text" name="customer_id" placeholder="Enter customer ID, e.g. 10005">
+    <button type="submit">Analyse</button>
+  </form>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h2>Customers by segment</h2><canvas id="segChart" height="220"></canvas></div>
+  <div class="card"><h2>Customers by risk level</h2><canvas id="riskChart" height="220"></canvas></div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Segment summary</h2>
+  <table>
+    <tr><th>Segment</th><th>Customers</th><th>Avg recency (days)</th><th>Avg orders</th><th>Avg spend</th><th>Avg churn prob.</th></tr>
+    {% for r in seg_table %}<tr><td>{{ r.segment }}</td><td>{{ r.customers }}</td><td>{{ r.avg_recency }}</td><td>{{ r.avg_frequency }}</td><td>{{ r.avg_spend|money }}</td><td>{{ (r.avg_churn*100)|round(1) }}%</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>High-risk customers with the highest spend</h2>
+  <table>
+    <tr><th>Customer</th><th>Segment</th><th>Total spend</th><th>Days since last order</th><th>Risk score</th><th>Priority</th></tr>
+    {% for r in top %}<tr><td><a href="{{ url_for('customer', cid=r.CustomerID) }}">{{ r.CustomerID }}</a></td><td>{{ r.segment }}</td><td>{{ r.monetary|money }}</td><td>{{ r.recency|int }}</td><td>{{ r.risk_score }}</td><td>{{ r.priority }}</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Churn model ({{ m.best_model }}) - tested on a later time period</h2>
+  <table>
+    <tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr>
+    {% for name, r in m.model_results.items() %}<tr><td>{{ name }}{% if name == m.best_model %} (selected){% endif %}</td>
+      <td>{{ '%.3f'|format(r.accuracy) }}</td><td>{{ '%.3f'|format(r.precision) }}</td><td>{{ '%.3f'|format(r.recall) }}</td><td>{{ '%.3f'|format(r.f1) }}</td><td>{{ '%.3f'|format(r.roc_auc) }}</td></tr>{% endfor %}
+  </table>
+  <p class="note">Trained on {{ m.train_rows }} customers (churn rate {{ (m.train_churn_rate*100)|round(1) }}%), tested on {{ m.test_rows }} customers (churn rate {{ (m.test_churn_rate*100)|round(1) }}%).</p>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h2>Feature importance</h2><img class="plot" src="{{ url_for('static', filename='plots/importance.png') }}" alt="feature importance"></div>
+  <div class="card"><h2>ROC curves</h2><img class="plot" src="{{ url_for('static', filename='plots/roc.png') }}" alt="ROC curves"></div>
+  <div class="card"><h2>Segments (recency vs spend)</h2><img class="plot" src="{{ url_for('static', filename='plots/segments.png') }}" alt="segments"></div>
+  <div class="card"><h2>Choosing the number of segments</h2><img class="plot" src="{{ url_for('static', filename='plots/silhouette.png') }}" alt="silhouette"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const palette = ["#2563eb", "#16a34a", "#d97706", "#dc2626", "#7c3aed", "#0891b2"];
+new Chart(document.getElementById("segChart"), {
+  type: "doughnut",
+  data: { labels: {{ seg_labels|tojson }}, datasets: [{ data: {{ seg_values|tojson }}, backgroundColor: palette }] },
+  options: { plugins: { legend: { position: "bottom" } } }
+});
+new Chart(document.getElementById("riskChart"), {
+  type: "bar",
+  data: { labels: {{ risk_labels|tojson }}, datasets: [{ data: {{ risk_values|tojson }}, backgroundColor: ["#16a34a", "#d97706", "#dc2626"] }] },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+</script>
+{% endblock %}

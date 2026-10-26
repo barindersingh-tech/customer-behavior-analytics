@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+models/*.pkl
+outputs/*
+!outputs/.gitkeep
+static/plots/*.png
+data/transactions.csv

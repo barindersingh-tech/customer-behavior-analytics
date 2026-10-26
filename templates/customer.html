@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Customer {{ c.customer_id }}{% endblock %}
+{% block content %}
+<h1>Customer {{ c.customer_id }}</h1>
+<p class="sub"><a href="{{ url_for('dashboard') }}">&larr; Back to dashboard</a></p>
+<div class="grid g4">
+  <div class="card kpi"><div class="l">Segment</div><div class="v" style="font-size:1.25rem">{{ c.segment }}</div></div>
+  <div class="card kpi"><div class="l">Churn probability</div><div class="v">{{ (c.churn_probability*100)|round(1) }}%</div></div>
+  <div class="card kpi"><div class="l">Risk score</div><div class="v">{{ c.risk_score }}/100</div></div>
+  <div class="card kpi"><div class="l">Risk level</div><div class="v"><span class="pill {{ c.risk_level }}">{{ c.risk_level }}</span></div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h2>Why?</h2><ul class="clean">{% for r in c.reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+    <p style="margin-top:14px"><b>Priority:</b> {{ c.priority }}</p></div>
+  <div class="card"><h2>Suggested action</h2><p>{{ c.suggested_action }}</p></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Behaviour features</h2>
+  <table>{% for k, v in c.features.items() %}<tr><td>{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</table>
+</div>
+{% endblock %}
